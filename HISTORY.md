@@ -1,3 +1,9 @@
+1.1.3 / 2022-05-11
+==================
+
+  * depds: updated
+  * depds xprezzo-finalhandler updated to v1.1.3
+
 1.1.2 / 2022-05-11
 ==================
 
@@ -11,8 +17,8 @@
   * depds nyc updated to 15.1.0
   * depds supertest updated to 6.2.3
   * remove eslint-plugin-standard
-  * depds xprezzo-debug updated to v.1.1.1
-  * depds xprezzo-finalhandler updated to v1.1.1 
+  * depds xprezzo-debug updated to v.1.1.2
+  * depds xprezzo-finalhandler updated to v1.1.2
 
 1.1.0 / 2020-10-15
 ==================

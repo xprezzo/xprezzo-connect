@@ -16,11 +16,10 @@ const finalhandler = require('xprezzo-finalhandler')
 const mixin = require('xprezzo-mixin')
 const http = require('http')
 const parseUrl = require('parseurl')
-
-let env = process.env.NODE_ENV || 'development'
+const env = process.env.NODE_ENV || 'development'
 
 /* istanbul ignore next */
-let defer = typeof setImmediate === 'function'
+const defer = typeof setImmediate === 'function'
     ? setImmediate
     : (fn) => { 
         process.nextTick(fn.bind.apply(fn, arguments)) 
@@ -28,9 +27,10 @@ let defer = typeof setImmediate === 'function'
 
 /**
  * Invoke a route handle.
+ * 
  * @private
  */
-let call = (handle, route, err, req, res, next) => {
+const invokeRouteHandle = (handle, route, err, req, res, next) => {
     let arity = handle.length
     let error = err
     let hasError = Boolean(err)
@@ -60,7 +60,7 @@ let call = (handle, route, err, req, res, next) => {
  * @private
  */
 
-let logerror = (err) => {
+const logerror = (err) => {
     if (env !== 'test') 
         console.error(err.stack || err.toString())
 }
@@ -72,7 +72,7 @@ let logerror = (err) => {
  * @private
  */
 
-let getProtohost = (url) => {
+const getProtohost = (url) => {
     if (url.length === 0 || url[0] === '/') {
       return undefined
     }
@@ -85,33 +85,11 @@ let getProtohost = (url) => {
 }
 
 /**
- * Create a new connect server.
- *
- * @return {function}
- * @public
- */
-let createServer = () => {
-    debug('start');
-    let app = (req, res, next) => { 
-        app.handle(req, res, next)
-    }
-    mixin(app, proto, EventEmitter.prototype,{
-      route : '/',
-      stack : []
-    });
-    if(typeof app.init === 'function'){
-        debug('call proto init()')
-        app.init()
-    }
-    debug('done')
-    return app
-}
-
-/**
- * Module variables.
+ * Xprezzo Connect
+ * 
  * @private
  */
-let proto = {
+ const xprezzoConnect = {
     /**
      * Utilize the given middleware `handle` to the given `route`,
      * defaulting to _/_. This "route" is the mount-point for the
@@ -186,7 +164,7 @@ let proto = {
         // store the original URL
         req.originalUrl = req.originalUrl || req.url
 
-        let next = (err) => {
+        let callNextHandle = (err) => {
             if (slashAdded) {
                 req.url = req.url.substr(1)
                 slashAdded = false
@@ -211,14 +189,14 @@ let proto = {
             let route = layer.route
 
             // skip this layer if the route doesn't match
-            if (path.toLowerCase().substr(0, route.length) !== route.toLowerCase()) {
-                return next(err)
+            if (path.toLowerCase().substring(0, route.length) !== route.toLowerCase()) {
+                return callNextHandle(err)
             }
 
             // skip if route match does not border "/", ".", or end
             let c = path.length > route.length && path[route.length]
             if (c && c !== '/' && c !== '.') {
-                return next(err)
+                return callNextHandle(err)
             }
 
             // trim off the part of the url that matches the route
@@ -233,9 +211,9 @@ let proto = {
                 }
             }
             // call the layer handle
-            call(layer.handle, route, err, req, res, next)
+            invokeRouteHandle(layer.handle, route, err, req, res, callNextHandle)
         }
-        next()
+        callNextHandle()
     },
 
     /**
@@ -268,6 +246,30 @@ let proto = {
         let server = http.createServer(this)
         return server.listen.apply(server, arguments)
     }
+}
+
+
+/**
+ * Create a new connect server.
+ *
+ * @return {function}
+ * @public
+ */
+const createServer = () => {
+    debug('start');
+    let app = (req, res, next) => { 
+        app.handle(req, res, next)
+    }
+    mixin(app, xprezzoConnect, EventEmitter.prototype,{
+      route : '/',
+      stack : []
+    });
+    if(typeof app.init === 'function'){
+        debug('call proto init()')
+        app.init()
+    }
+    debug('done')
+    return app
 }
 
 
